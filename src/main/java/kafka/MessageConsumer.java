@@ -1,3 +1,5 @@
+package kafka;
+
 import com.google.common.util.concurrent.RateLimiter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -8,23 +10,12 @@ import org.apache.kafka.common.TopicPartition;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 public class MessageConsumer {
     public void consume() {
-        Properties props = new Properties();
-        props.put("bootstrap.servers", "localhost:29092");
-        props.put("group.id", "test");
-        props.put("enable.auto.commit", "false");
-        props.put("session.timeout.ms", "30000");
-        props.put("max.poll.records", 400);
-        props.put("max.poll.interval.ms", 10000);
-        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-
         RateLimiter rateLimiter = RateLimiter.create(500);
-        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
-            consumer.subscribe(List.of("notification"));
+        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(KafkaConfig.kafkaConsumerConfig())) {
+            consumer.subscribe(List.of(Topics.NOTIFICATION_TOPIC));
 
             while (true) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(2));

@@ -1,3 +1,6 @@
+import kafka.MessageConsumer;
+import kafka.MessageProducer;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
