@@ -22,9 +22,10 @@ public class KafkaConfig {
         Properties properties = new Properties();
         properties.put("bootstrap.servers", HOST);
         properties.put("acks", "all");
-        properties.put("retries", 0);
+        properties.put("retries", Integer.MAX_VALUE);
+        properties.put("retry.backoff.ms", 1000);
         properties.put("batch.size", 16384);
-        properties.put("linger.ms", 1);
+        properties.put("linger.ms", 12000);
         properties.put("buffer.memory", 33554432);
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");

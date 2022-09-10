@@ -30,7 +30,7 @@ public class MessageConsumer {
                             kafkaConsumer.pause(kafkaConsumer.assignment());
                             break;
                         }
-                        System.out.printf("offset = %d, key = %s, value = %s\n", consumerRecord.offset(), consumerRecord.key(), consumerRecord.value());
+                        System.out.printf("partition = %d, offset = %d, key = %s, value = %s\n", consumerRecord.partition(), consumerRecord.offset(), consumerRecord.key(), consumerRecord.value());
                         lastConsumedRecord = consumerRecord;
                     }
                     if (lastConsumedRecord != null) {
