@@ -14,29 +14,29 @@ import java.util.Map;
 public class MessageConsumer {
     public void consume() {
         RateLimiter rateLimiter = RateLimiter.create(500);
-        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(KafkaConfig.kafkaConsumerConfig())) {
-            consumer.subscribe(List.of(Topics.NOTIFICATION_TOPIC));
+        try (KafkaConsumer<String, String> kafkaConsumer = new KafkaConsumer<>(KafkaConfig.kafkaConsumerConfig())) {
+            kafkaConsumer.subscribe(List.of(Topics.NOTIFICATION_TOPIC));
 
             while (true) {
-                ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(2));
-                if (rateLimiter.tryAcquire()) consumer.resume(consumer.paused());
-                if (records.isEmpty()) continue;
+                ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(Duration.ofSeconds(2));
+                if (rateLimiter.tryAcquire()) kafkaConsumer.resume(kafkaConsumer.paused());
+                if (consumerRecords.isEmpty()) continue;
 
-                for (TopicPartition partition : records.partitions()) {
-                    ConsumerRecord<String, String> lastRecord = null;
-                    for (ConsumerRecord<String, String> record : records.records(partition)) {
+                for (TopicPartition partition : consumerRecords.partitions()) {
+                    ConsumerRecord<String, String> lastConsumedRecord = null;
+                    for (ConsumerRecord<String, String> consumerRecord : consumerRecords.records(partition)) {
                         if (!rateLimiter.tryAcquire()) {
                             System.out.println("throttled");
-                            consumer.pause(consumer.assignment());
+                            kafkaConsumer.pause(kafkaConsumer.assignment());
                             break;
                         }
-                        System.out.printf("offset = %d, key = %s, value = %s\n", record.offset(), record.key(), record.value());
-                        lastRecord = record;
+                        System.out.printf("offset = %d, key = %s, value = %s\n", consumerRecord.offset(), consumerRecord.key(), consumerRecord.value());
+                        lastConsumedRecord = consumerRecord;
                     }
-                    if (lastRecord != null) {
-                        OffsetAndMetadata lastOffset = new OffsetAndMetadata(lastRecord.offset() + 1);
-                        consumer.commitSync(Map.of(partition, lastOffset));
-                        consumer.seek(partition, lastOffset);
+                    if (lastConsumedRecord != null) {
+                        OffsetAndMetadata lastOffset = new OffsetAndMetadata(lastConsumedRecord.offset() + 1);
+                        kafkaConsumer.commitSync(Map.of(partition, lastOffset));
+                        kafkaConsumer.seek(partition, lastOffset);
                     }
                 }
             }

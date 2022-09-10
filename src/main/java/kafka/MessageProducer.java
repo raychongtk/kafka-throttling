@@ -7,11 +7,11 @@ import java.util.Random;
 
 public class MessageProducer {
     public void produce() {
-        try (KafkaProducer<String, String> producer = new KafkaProducer<>(KafkaConfig.kafkaProducerConfig())) {
+        Random random = new Random();
+        try (KafkaProducer<String, String> kafkaProducer = new KafkaProducer<>(KafkaConfig.kafkaProducerConfig())) {
             while (true) {
-                Random random = new Random();
-                int value = random.nextInt(10) + 1;
-                producer.send(new ProducerRecord<>(Topics.NOTIFICATION_TOPIC, value + "", "abc"));
+                String key = String.valueOf(random.nextInt(10) + 1);
+                kafkaProducer.send(new ProducerRecord<>(Topics.NOTIFICATION_TOPIC, key, "testValue"));
             }
         }
     }
