@@ -1,5 +1,7 @@
-import kafka.MessageConsumer;
-import kafka.MessageProducer;
+package app;
+
+import app.kafka.MessageConsumer;
+import app.kafka.MessageProducer;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -9,6 +11,6 @@ public class Main {
         ExecutorService executorService = Executors.newFixedThreadPool(1);
         executorService.submit(() -> new MessageProducer().produce());
 
-        new MessageConsumer().consume();
+        new MessageConsumer().run(3);
     }
 }

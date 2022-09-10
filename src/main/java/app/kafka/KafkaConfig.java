@@ -1,4 +1,4 @@
-package kafka;
+package app.kafka;
 
 import java.util.Properties;
 
@@ -8,7 +8,7 @@ public class KafkaConfig {
     public static Properties kafkaConsumerConfig() {
         Properties properties = new Properties();
         properties.put("bootstrap.servers", HOST);
-        properties.put("group.id", "test");
+        properties.put("group.id", "notification-group");
         properties.put("enable.auto.commit", "false");
         properties.put("session.timeout.ms", "30000");
         properties.put("max.poll.records", 400);

@@ -1,4 +1,4 @@
-package kafka;
+package app.kafka;
 
 import com.google.common.util.concurrent.RateLimiter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -11,12 +11,21 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
-public class MessageConsumer {
-    public void consume() {
-        RateLimiter rateLimiter = RateLimiter.create(500);
-        try (KafkaConsumer<String, String> kafkaConsumer = new KafkaConsumer<>(KafkaConfig.kafkaConsumerConfig())) {
-            kafkaConsumer.subscribe(List.of(Topics.NOTIFICATION_TOPIC));
+public class MessageConsumerThread extends Thread {
+    private final KafkaConsumer<String, String> kafkaConsumer;
+    private final RateLimiter rateLimiter;
+    private final String threadName;
 
+    public MessageConsumerThread(String threadName, RateLimiter rateLimiter) {
+        this.threadName = threadName;
+        this.rateLimiter = rateLimiter;
+        kafkaConsumer = new KafkaConsumer<>(KafkaConfig.kafkaConsumerConfig());
+        kafkaConsumer.subscribe(List.of(Topics.NOTIFICATION_TOPIC));
+    }
+
+    @Override
+    public void run() {
+        try {
             while (true) {
                 ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(Duration.ofSeconds(2));
                 if (rateLimiter.tryAcquire()) kafkaConsumer.resume(kafkaConsumer.paused());
@@ -30,7 +39,7 @@ public class MessageConsumer {
                             kafkaConsumer.pause(kafkaConsumer.assignment());
                             break;
                         }
-                        System.out.printf("partition = %d, offset = %d, key = %s, value = %s\n", consumerRecord.partition(), consumerRecord.offset(), consumerRecord.key(), consumerRecord.value());
+                        System.out.printf("threadName = %s, partition = %d, offset = %d, key = %s, value = %s\n", threadName, consumerRecord.partition(), consumerRecord.offset(), consumerRecord.key(), consumerRecord.value());
                         lastConsumedRecord = consumerRecord;
                     }
                     if (lastConsumedRecord != null) {
@@ -40,6 +49,8 @@ public class MessageConsumer {
                     }
                 }
             }
+        } finally {
+            kafkaConsumer.close();
         }
     }
 }
