@@ -10,8 +10,9 @@ public class MessageProducer {
         Random random = new Random();
         try (KafkaProducer<String, String> kafkaProducer = new KafkaProducer<>(KafkaConfig.kafkaProducerConfig())) {
             while (true) {
-                String key = String.valueOf(random.nextInt(10) + 1);
-                kafkaProducer.send(new ProducerRecord<>(Topics.NOTIFICATION_TOPIC, key, "testValue"));
+                NotificationChannel notificationChannel = NotificationChannel.values()[random.nextInt(3)];
+                int partition = PartitionMapper.partition(notificationChannel);
+                kafkaProducer.send(new ProducerRecord<>(Topics.NOTIFICATION_TOPIC, partition, "key", "testValue"));
             }
         }
     }

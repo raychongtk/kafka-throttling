@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,17 +20,22 @@ public class MessageConsumerThread extends Thread {
     private final RateLimiter rateLimiter;
     private final String threadName;
 
-    public MessageConsumerThread(String threadName, RateLimiter rateLimiter) {
+    public MessageConsumerThread(String threadName, RateLimiter rateLimiter, List<Integer> partitions) {
         this.threadName = threadName;
         this.rateLimiter = rateLimiter;
         kafkaConsumer = new KafkaConsumer<>(KafkaConfig.kafkaConsumerConfig());
-        kafkaConsumer.subscribe(List.of(Topics.NOTIFICATION_TOPIC));
+        List<TopicPartition> topicPartitions = new ArrayList<>();
+        for (Integer partition : partitions) {
+            topicPartitions.add(new TopicPartition(Topics.NOTIFICATION_TOPIC, partition));
+        }
+        kafkaConsumer.assign(topicPartitions);
     }
 
     @Override
     public void run() {
         try {
             while (true) {
+                if (rateLimiter.tryAcquire()) kafkaConsumer.resume(kafkaConsumer.paused());
                 ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(Duration.ofSeconds(2));
                 if (consumerRecords.isEmpty()) continue;
 
@@ -56,7 +62,8 @@ public class MessageConsumerThread extends Thread {
 
     private boolean messageThrottled() {
         if (!rateLimiter.tryAcquire()) {
-            logger.warn("message throttled");
+            logger.warn("threadName={}, message throttled", threadName);
+            kafkaConsumer.pause(kafkaConsumer.assignment());
             return true;
         }
         return false;
