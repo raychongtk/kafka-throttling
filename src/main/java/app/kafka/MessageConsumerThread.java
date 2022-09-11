@@ -47,7 +47,7 @@ public class MessageConsumerThread extends Thread {
         for (TopicPartition partition : consumerRecords.partitions()) {
             ConsumerRecord<String, String> lastConsumedRecord = null;
             for (ConsumerRecord<String, String> consumerRecord : consumerRecords.records(partition)) {
-                if (shouldThrottleMessage()) break;
+                if (messageThrottled()) break;
                 process(consumerRecord);
                 lastConsumedRecord = consumerRecord;
             }
@@ -55,7 +55,7 @@ public class MessageConsumerThread extends Thread {
         }
     }
 
-    private boolean shouldThrottleMessage() {
+    private boolean messageThrottled() {
         if (!rateLimiter.tryAcquire()) {
             logger.warn("message throttled");
             kafkaConsumer.pause(kafkaConsumer.assignment());
