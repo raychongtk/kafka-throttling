@@ -30,8 +30,8 @@ public class MessageConsumerThread extends Thread {
     public void run() {
         try {
             while (true) {
-                ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(Duration.ofSeconds(2));
                 kafkaConsumer.resume(kafkaConsumer.paused());
+                ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(Duration.ofSeconds(2));
                 if (consumerRecords.isEmpty()) continue;
 
                 consume(consumerRecords);
