@@ -44,13 +44,13 @@ public class MessageConsumerThread extends Thread {
 
     private void consume(ConsumerRecords<String, String> consumerRecords) {
         for (TopicPartition partition : consumerRecords.partitions()) {
-            ConsumerRecord<String, String> lastConsumedRecord = null;
+            long lastOffset = -1;
             for (ConsumerRecord<String, String> consumerRecord : consumerRecords.records(partition)) {
                 if (shouldThrottle(consumerRecord)) break;
                 process(consumerRecord);
-                lastConsumedRecord = consumerRecord;
+                lastOffset = consumerRecord.offset();
             }
-            if (lastConsumedRecord != null) commit(partition, lastConsumedRecord);
+            if (lastOffset >= 0) commit(partition, lastOffset);
         }
     }
 
@@ -68,9 +68,9 @@ public class MessageConsumerThread extends Thread {
         logger.info("threadName={}, partition={}, offset={}, key={}, value={}", threadName, consumerRecord.partition(), consumerRecord.offset(), consumerRecord.key(), consumerRecord.value());
     }
 
-    private void commit(TopicPartition partition, ConsumerRecord<String, String> lastConsumedRecord) {
-        OffsetAndMetadata lastOffset = new OffsetAndMetadata(lastConsumedRecord.offset() + 1);
-        kafkaConsumer.commitSync(Map.of(partition, lastOffset));
-        kafkaConsumer.seek(partition, lastOffset);
+    private void commit(TopicPartition partition, long lastOffset) {
+        OffsetAndMetadata nextOffset = new OffsetAndMetadata(lastOffset + 1);
+        kafkaConsumer.commitSync(Map.of(partition, nextOffset));
+        kafkaConsumer.seek(partition, nextOffset);
     }
 }
