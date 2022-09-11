@@ -30,7 +30,6 @@ public class MessageConsumerThread extends Thread {
     public void run() {
         try {
             while (true) {
-                kafkaConsumer.resume(kafkaConsumer.paused());
                 ConsumerRecords<String, String> consumerRecords = kafkaConsumer.poll(Duration.ofSeconds(2));
                 if (consumerRecords.isEmpty()) continue;
 
@@ -58,7 +57,6 @@ public class MessageConsumerThread extends Thread {
     private boolean messageThrottled() {
         if (!rateLimiter.tryAcquire()) {
             logger.warn("message throttled");
-            kafkaConsumer.pause(kafkaConsumer.assignment());
             return true;
         }
         return false;
