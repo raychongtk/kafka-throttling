@@ -7,24 +7,31 @@ public class MessageRateLimiter {
     private RateLimiter emailRateLimiter;
     private RateLimiter inboxRateLimiter;
 
-    public RateLimiter getSmsRateLimiter() {
+    private RateLimiter getSmsRateLimiter() {
         if (smsRateLimiter == null) {
             smsRateLimiter = RateLimiter.create(3000);
         }
         return smsRateLimiter;
     }
 
-    public RateLimiter getInboxRateLimiter() {
+    private RateLimiter getInboxRateLimiter() {
         if (inboxRateLimiter == null) {
             inboxRateLimiter = RateLimiter.create(500);
         }
         return inboxRateLimiter;
     }
 
-    public RateLimiter getEmailRateLimiter() {
+    private RateLimiter getEmailRateLimiter() {
         if (emailRateLimiter == null) {
             emailRateLimiter = RateLimiter.create(2000);
         }
         return emailRateLimiter;
+    }
+
+    public RateLimiter getRateLimit(NotificationChannel notificationChannel) {
+        if (notificationChannel == NotificationChannel.SMS) return getSmsRateLimiter();
+        if (notificationChannel == NotificationChannel.EMAIL) return getEmailRateLimiter();
+        if (notificationChannel == NotificationChannel.INBOX) return getInboxRateLimiter();
+        throw new IllegalArgumentException("invalid notification channel");
     }
 }

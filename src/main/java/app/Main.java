@@ -11,6 +11,6 @@ public class Main {
         ExecutorService executorService = Executors.newFixedThreadPool(1);
         executorService.submit(() -> new MessageProducer().produce());
 
-        new MessageConsumer().run();
+        new MessageConsumer().run(10);
     }
 }
